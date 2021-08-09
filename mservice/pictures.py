@@ -20,8 +20,8 @@ def upload():
 
 	db = db_open()
 	db.execute(
-		"INSERT INTO PICTURES (P_LINK, P_SOURCE) VALUES (?, ?)",
-		(link, file_encode)
+		"INSERT INTO PICTURES (P_LINK, P_FILENAME, P_SOURCE) VALUES (?, ?, ?)",
+		(link, file.filename, file_encode)
 	)
 
 	db_cnt = db.execute(
