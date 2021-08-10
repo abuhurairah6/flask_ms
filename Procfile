@@ -1,1 +1,1 @@
-web: gunicorn mservice.wsgi
+web: gunicorn mservice.wsgi:app
