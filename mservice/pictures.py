@@ -1,9 +1,13 @@
+import io
+import os
 import base64
 import random
 import zipfile
-from flask import Blueprint, request, send_file, jsonify, make_response
+import tempfile
+from flask import Blueprint, request, send_file, jsonify, make_response, Response
 from mservice.db import db_open
 from werkzeug.datastructures import FileStorage
+from PIL import Image
 
 def get_file_extension(filename):
 	return filename.rsplit('.', 1)[1].lower()
@@ -71,22 +75,31 @@ def upload():
 @bp.route("/load", methods = ["GET"])
 def download():
 	link = request.args.get("link")
+	size = request.args.get("size")
 	if link is None:
 		return "Please pass a reference link to your picture!"
 
 	db = db_open()
 
 	file = db.execute(
-		"SELECT P_SOURCE FROM PICTURES WHERE P_LINK = ?",
+		"SELECT P_FILENAME, P_SOURCE FROM PICTURES WHERE P_LINK = ?",
 		(link,)
 	).fetchone()
 
 	if not file:
 		return "Supplied reference link " + link + " does not exists!"
 
-	file_decode = base64.b64decode(file[0])
+	file_decode = base64.b64decode(file[1])
 
-	response = make_response(file_decode)
+	if size is not None and int(size) > 0:
+		thumbnail_size = min(128, int(size))
+		with Image.open(io.BytesIO(file_decode)) as im:
+			im.thumbnail((thumbnail_size, thumbnail_size))
+			file_decode = io.BytesIO(b"")
+			im.save(file_decode, format = get_file_extension(file[0]))
+		file_decode.seek(0)
+
+	response = Response(file_decode)
 	response.headers.set('Content-Type', 'image/jpeg')
-	response.headers.set('Content-Disposition', 'attachment')
+	# response.headers.set('Content-Disposition', 'attachment')
 	return response
