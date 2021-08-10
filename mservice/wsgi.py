@@ -1,4 +1,3 @@
-from mservice import create_app as application
+from mservice import create_app
 
-if __name__ == "__main__":
-    app = application
+app = create_app()
