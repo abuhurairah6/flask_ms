@@ -1,0 +1,2 @@
+include mservice/schema.sql
+global-exclude *.pyc
